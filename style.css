@@ -17,3 +17,17 @@ body { margin: 0; background: #000; display: flex; justify-content: center; alig
 h1 { color: #00ffcc; text-shadow: 0 0 20px #00ffcc; font-size: 32px; margin-bottom: 20px; }
 button { background: none; border: 2px solid #00ffcc; color: #00ffcc; padding: 12px 24px; margin: 5px; cursor: pointer; font-family: monospace; transition: 0.3s; }
 button:hover { background: #00ffcc; color: #000; box-shadow: 0 0 20px #00ffcc; }
+#game-container {
+    background: #020005; /* Base dark sky */
+    overflow: hidden;
+}
+
+canvas {
+    image-rendering: pixelated; /* Keeps the humanoid looking sharp */
+}
+
+#health-bar {
+    flex-direction: row !important;
+    gap: 10px;
+}
+
