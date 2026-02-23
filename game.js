@@ -26,8 +26,13 @@ const player = {
 // Procedural Terrain
 let platforms = [{ x: 0, y: 350, w: 1200, h: 100 }];
 let buildings = [];
-for(let i=0; i<20; i++) {
-    buildings.push({ x: i * 300, w: 100 + Math.random() * 150, h: 200 + Math.random() * 200, color: `rgba(20, 20, 40, ${0.5 + Math.random() * 0.5})` });
+for(let i=0; i<30; i++) {
+    buildings.push({ 
+        x: i * 300, 
+        w: 100 + Math.random() * 150, 
+        h: 200 + Math.random() * 200, 
+        color: `rgba(20, 20, 40, ${0.5 + Math.random() * 0.5})` 
+    });
 }
 
 let enemies = [{ x: 800, y: 290, w: 30, h: 60, health: 100, vx: -2, state: "ALIVE" }];
@@ -39,7 +44,7 @@ function startGame(ch) {
     gameState = "PLAYING";
 }
 
-// Input Handlers
+// Fight Input
 canvas.addEventListener('mousedown', () => {
     if (gameState !== "PLAYING" || player.actionFrame > 0) return;
     player.actionType = Math.random() > 0.5 ? "PUNCH" : "KICK";
@@ -66,13 +71,18 @@ function update() {
     animTimer += 0.15;
     if (comboTimer > 0) comboTimer--; else { combo = 0; document.getElementById('combo-ui').style.display = 'none'; }
 
-    // Procedural Terrain Generation (Minecraft Style)
+    // Procedural Terrain Generation
     let lastPlat = platforms[platforms.length - 1];
     if (lastPlat.x < cameraX + canvas.width + 500) {
-        platforms.push({ x: lastPlat.x + lastPlat.w + (Math.random() * 100 + 50), y: 200 + Math.random() * 150, w: 200 + Math.random() * 400, h: 400 });
+        platforms.push({ 
+            x: lastPlat.x + lastPlat.w + (Math.random() * 100 + 50), 
+            y: 200 + Math.random() * 150, 
+            w: 200 + Math.random() * 400, 
+            h: 400 
+        });
     }
 
-    // Movement Logic
+    // Movement
     player.isSliding = keys['shift'] && player.grounded;
     if (keys['d']) { player.vx += ACCEL; player.dir = 1; }
     if (keys['a']) { player.vx -= ACCEL; player.dir = -1; }
@@ -82,7 +92,7 @@ function update() {
     player.vy += GRAVITY;
     cameraX += player.vx;
 
-    // Fixed Ground Collision
+    // Ground Collision
     player.grounded = false;
     platforms.forEach(p => {
         let screenPos = player.x + cameraX;
@@ -101,7 +111,7 @@ function update() {
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Parallax City Background
+    // Parallax City
     buildings.forEach(b => {
         let px = (b.x - (cameraX * 0.3)) % 3000;
         ctx.fillStyle = b.color;
@@ -115,26 +125,34 @@ function draw() {
     // Player Humanoid
     drawCharacter(player.x, player.y, player.dir, player.isSliding, false);
 
-    // Enemies (YNs)
+    // Enemies
     enemies.forEach(en => { if (en.state === "ALIVE") drawCharacter(en.x - cameraX, en.y, -1, false, true); });
 
-    // Damage Pops
+    // Floating Text
     damageNumbers.forEach(n => { ctx.fillStyle = "#ff0000"; ctx.font = "bold 20px monospace"; ctx.fillText(n.text, n.x, n.y); });
 
     document.getElementById('speed').innerText = Math.round(Math.abs(player.vx));
-    requestAnimationFrame(gameLoop);
 }
 
 function drawCharacter(x, y, dir, sliding, isEnemy) {
     let breathe = Math.sin(animTimer) * 2;
     let yOff = sliding ? 30 : 0;
-    ctx.fillStyle = isEnemy ? "#1a1a1a" : "#4a4a4e"; // Gray/Black Jeans
-    ctx.fillRect(x + 5, y + 35 + yOff, 8, 25 - yOff); ctx.fillRect(x + 17, y + 35 + yOff, 8, 25 - yOff);
-    ctx.fillStyle = isEnemy ? "#220000" : "#000000"; // Black Hoodie
+    ctx.fillStyle = isEnemy ? "#1a1a1a" : "#4a4a4e"; // Jeans
+    ctx.fillRect(x + 5, y + 35 + yOff, 8, 25 - yOff); 
+    ctx.fillRect(x + 17, y + 35 + yOff, 8, 25 - yOff);
+    ctx.fillStyle = isEnemy ? "#220000" : "#000000"; // Hoodie
     ctx.fillRect(x, y + 10 + yOff - breathe, 30, (sliding ? 20 : 35) + breathe);
     ctx.beginPath(); ctx.arc(x + 15, y + 8 + yOff - breathe, 12, 0, Math.PI * 2); ctx.fill();
-    if (player.actionFrame > 0 && !isEnemy) { ctx.fillStyle = "#f3d2b3"; ctx.fillRect(dir === 1 ? x + 30 : x - 15, y + 20 + yOff, 20, 10); }
+    
+    // Action Visual
+    if (player.actionFrame > 0 && !isEnemy) { 
+        ctx.fillStyle = "#f3d2b3"; 
+        ctx.fillRect(dir === 1 ? x + 30 : x - 15, y + 20 + yOff, 20, 10); 
+    }
 }
 
-function gameLoop() { if (gameState === "PLAYING") { update(); draw(); } else { requestAnimationFrame(gameLoop); } }
-gameLoop();
+function gameLoop() { 
+    if (gameState === "PLAYING") { update(); draw(); } 
+    requestAnimationFrame(gameLoop); 
+}
+gameLoop(); // Corrected function call
