@@ -1,0 +1,34 @@
+body {
+    margin: 0;
+    background: #020005;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: 'Courier New', monospace;
+    overflow: hidden;
+}
+
+#game-container {
+    position: relative;
+    border: 4px solid #1a1a1a;
+    background-color: #000;
+    box-shadow: 0 0 50px rgba(0, 255, 204, 0.2);
+}
+
+#ui {
+    position: absolute;
+    top: 15px; left: 15px;
+    display: flex; gap: 10px;
+    z-index: 10;
+}
+
+.stat {
+    background: rgba(0, 0, 0, 0.85);
+    color: #00ffcc;
+    padding: 8px 12px;
+    border: 1px solid #00ffcc;
+    text-transform: uppercase;
+}
+
+canvas { display: block; background: transparent; }
