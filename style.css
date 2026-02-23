@@ -1,33 +1,26 @@
-body { margin: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: monospace; overflow: hidden; }
-#game-container { position: relative; border: 4px solid #1a1a1a; background: #050010; overflow: hidden; }
+body { margin: 0; background: #020005; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Courier New', monospace; overflow: hidden; }
+
+#game-container { position: relative; border: 4px solid #1a1a1a; background: #020005; overflow: hidden; width: 1000px; height: 400px; }
+
 #ui { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 10px; z-index: 10; }
+
 #health-bar { display: flex; gap: 5px; background: rgba(0,0,0,0.7); padding: 5px; border-radius: 5px; }
-.heart { font-size: 20px; transition: opacity 0.3s; }
-.stat { background: rgba(0,0,0,0.8); color: #00ffcc; padding: 5px 10px; border: 1px solid #333; width: fit-content; }
 
 #combo-ui { font-size: 24px; color: #ff00ff; text-shadow: 0 0 10px #ff00ff; font-weight: bold; display: none; }
-.combo-pop { animation: pop 0.2s ease-out; }
-@keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
+
+.stat { background: rgba(0, 0, 0, 0.9); color: #00ffcc; padding: 8px 12px; border: 1px solid #333; width: fit-content; }
 
 #inventory-container { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
+
 .inv-slot { width: 50px; height: 50px; background: rgba(0,0,0,0.8); border: 2px solid #444; color: #00ffcc; font-size: 9px; display: flex; justify-content: center; align-items: center; }
+
 .inv-slot.active { border-color: #ff00ff; box-shadow: 0 0 10px #ff00ff; }
 
-#menu-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
-h1 { color: #00ffcc; text-shadow: 0 0 20px #00ffcc; font-size: 32px; margin-bottom: 20px; }
-button { background: none; border: 2px solid #00ffcc; color: #00ffcc; padding: 12px 24px; margin: 5px; cursor: pointer; font-family: monospace; transition: 0.3s; }
-button:hover { background: #00ffcc; color: #000; box-shadow: 0 0 20px #00ffcc; }
-#game-container {
-    background: #020005; /* Base dark sky */
-    overflow: hidden;
-}
+/* Menu Screen */
+#menu-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
 
-canvas {
-    image-rendering: pixelated; /* Keeps the humanoid looking sharp */
-}
+h1 { color: #00ffcc; text-shadow: 0 0 20px #00ffcc; font-size: 3rem; margin-bottom: 30px; }
 
-#health-bar {
-    flex-direction: row !important;
-    gap: 10px;
-}
+button { background: transparent; color: #ff00ff; border: 2px solid #ff00ff; padding: 15px 40px; cursor: pointer; transition: 0.3s; }
 
+button:hover { background: #ff00ff; color: white; box-shadow: 0 0 20px #ff00ff; }
