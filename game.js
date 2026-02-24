@@ -1,29 +1,35 @@
 let gameState = "MENU";
+let isPaused = false;
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 canvas.width = 1000; canvas.height = 400;
 
+// Physics
 const GRAVITY = 0.5;
 const FRICTION = 0.88;
 const ACCEL = 0.75;
-let cameraX = 0, animTimer = 0, combo = 0, comboTimer = 0, currentChapter = 1;
+let cameraX = 0, animTimer = 0, combo = 0, comboTimer = 0;
 
 const weapons = [
-    { name: "FIST", icon: "👊", damage: 25 },
-    { name: "KICK", icon: "🦵", damage: 35 },
-    { name: "KATANA", icon: "⚔️", damage: 50 }
+    { name: "FIST", icon: "👊", damage: 20, range: 60 },
+    { name: "KICK", icon: "🦵", damage: 30, range: 75 },
+    { name: "KATANA", icon: "⚔️", damage: 55, range: 110 }
 ];
 let currentWeaponIdx = 0;
 
-const player = {
-    x: 100, y: 100, vx: 0, vy: 0, w: 40, h: 70, health: 100,
-    grounded: false, dir: 1, actionFrame: 0
-};
+const player = { x: 100, y: 100, vx: 0, vy: 0, w: 30, h: 75, health: 100, grounded: false, dir: 1, actionFrame: 0 };
+let platforms = [], buildings = [], enemies = [], particles = [], damageNumbers = [];
 
-let platforms = [];
-let buildings = [];
-let enemies = [];
-let damageNumbers = [];
+function togglePause() {
+    isPaused = !isPaused;
+    document.getElementById('pause-screen').style.display = isPaused ? 'flex' : 'none';
+}
+
+window.addEventListener('keydown', e => {
+    if(e.key === "Escape") togglePause();
+    window.keys = window.keys || {}; window.keys[e.key.toLowerCase()] = true;
+});
+window.addEventListener('keyup', e => { window.keys[e.key.toLowerCase()] = false; });
 
 function switchWeapon(dir) {
     currentWeaponIdx = (currentWeaponIdx + dir + weapons.length) % weapons.length;
@@ -31,67 +37,95 @@ function switchWeapon(dir) {
     document.getElementById('weapon-icon').innerText = weapons[currentWeaponIdx].icon;
 }
 
+function spawnBlood(x, y, amount) {
+    for(let i=0; i<amount; i++) {
+        particles.push({
+            x: x, y: y, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10,
+            size: Math.random()*4+2, life: 1, color: "#ff0022"
+        });
+    }
+}
+
 function startGame(ch) {
-    currentChapter = ch;
     gameState = "PLAYING";
     player.health = 100;
-    player.x = 100; player.y = 100; cameraX = 0;
-    platforms = [{ x: 0, y: 340, w: 1500, h: 100 }];
-    buildings = []; enemies = [];
-    for(let i=0; i<15; i++) buildings.push({ x: i * 400, w: 200, h: 200 + Math.random()*200, hue: Math.random()*360 });
+    platforms = [{ x: 0, y: 350, w: 2000, h: 100 }];
+    enemies = [{ x: 800, y: 0, w: 30, h: 75, health: 100, state: "ALIVE", vy: 0 }];
     document.getElementById('menu-screen').style.display = 'none';
     document.getElementById('ui').style.display = 'flex';
 }
 
 canvas.addEventListener('mousedown', () => {
-    if (gameState !== "PLAYING" || player.actionFrame > 0) return;
-    player.actionFrame = 15;
+    if (gameState !== "PLAYING" || isPaused || player.actionFrame > 0) return;
+    player.actionFrame = 20;
     
     enemies.forEach(en => {
         let dist = Math.abs((player.x + cameraX) - en.x);
-        if (dist < 90 && en.state === "ALIVE") {
-            let dmg = weapons[currentWeaponIdx].damage;
-            en.health -= dmg;
-            combo++; comboTimer = 100;
-            damageNumbers.push({ x: en.x - cameraX, y: en.y, text: dmg, life: 30, color: '#00f2ff' });
+        if (dist < weapons[currentWeaponIdx].range && en.state === "ALIVE") {
+            en.health -= weapons[currentWeaponIdx].damage;
+            spawnBlood(en.x - cameraX + 15, en.y + 30, 15);
+            combo++; comboTimer = 120;
             if (en.health <= 0) en.state = "DEAD";
-            updateUI();
         }
     });
 });
 
-function updateUI() {
-    document.getElementById('health-fill').style.width = player.health + "%";
-    if (combo > 0) {
-        let comboUI = document.getElementById('combo-ui');
-        comboUI.style.display = 'block';
-        comboUI.style.color = `hsl(${combo * 45}, 100%, 70%)`;
-        document.getElementById('combo-count').innerText = combo;
+function drawHumanoid(x, y, dir, action, isEnemy, hue = 0) {
+    ctx.save();
+    if (isEnemy) ctx.filter = `hue-rotate(${hue}deg) brightness(0.7)`;
+    
+    let legCycle = Math.sin(animTimer*1.5) * 12;
+    let chestBreathe = Math.sin(animTimer * 0.5) * 2;
+
+    // Athlete Legs (Tapered)
+    ctx.fillStyle = "#222"; 
+    ctx.beginPath(); // L-Leg
+    ctx.moveTo(x+10, y+45); ctx.lineTo(x+5+legCycle, y+75); ctx.lineTo(x+15+legCycle, y+75); ctx.fill();
+    ctx.beginPath(); // R-Leg
+    ctx.moveTo(x+20, y+45); ctx.lineTo(x+15-legCycle, y+75); ctx.lineTo(x+25-legCycle, y+75); ctx.fill();
+
+    // V-Taper Torso (Athletic)
+    ctx.fillStyle = isEnemy ? "#411" : "#111";
+    ctx.beginPath();
+    ctx.moveTo(x, y+20-chestBreathe); ctx.lineTo(x+30, y+20-chestBreathe);
+    ctx.lineTo(x+20, y+45); ctx.lineTo(x+10, y+45); ctx.closePath(); ctx.fill();
+
+    // Cyan Face (Reference Image Style)
+    ctx.fillStyle = "#4dd0e1";
+    ctx.beginPath(); ctx.roundRect(x+8, y+2, 14, 15, 4); ctx.fill();
+    
+    // Anime Eyes
+    ctx.fillStyle = "#000"; ctx.fillRect(x+10, y+6, 3, 2); ctx.fillRect(x+17, y+6, 3, 2);
+
+    // Combat Animations
+    if (action > 0) {
+        ctx.strokeStyle = weapons[currentWeaponIdx].name === "KATANA" ? "#00f2ff" : "#fff";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(x+15, y+25);
+        ctx.lineTo(x+15 + (dir * (action*2.5)), y+25 + (Math.sin(action)*10));
+        ctx.stroke();
     }
+    ctx.restore();
 }
 
 function update() {
+    if(isPaused) return;
     animTimer += 0.15;
-    if (comboTimer > 0) comboTimer--; else { combo = 0; document.getElementById('combo-ui').style.display = 'none'; }
+    if (comboTimer > 0) comboTimer--; else combo = 0;
 
-    // Death Check
-    if (player.y > canvas.height + 50 || player.health <= 0) {
-        gameState = "MENU";
-        document.getElementById('menu-screen').style.display = 'flex';
-        return;
-    }
+    // Movement & Falling Logic
+    if (player.y > canvas.height) { player.health = 0; location.reload(); }
 
-    // Controls
     const keys = window.keys || {};
     if (keys['d']) { player.vx += ACCEL; player.dir = 1; }
     if (keys['a']) { player.vx -= ACCEL; player.dir = -1; }
-    if (keys['w'] && player.grounded) { player.vy = -13; player.grounded = false; }
+    if (keys['w'] && player.grounded) { player.vy = -14; player.grounded = false; }
 
-    player.vx *= FRICTION;
-    player.vy += GRAVITY;
+    player.vx *= FRICTION; player.vy += GRAVITY;
     cameraX += player.vx;
 
-    // Collision
+    // Platform Collision
     player.grounded = false;
     platforms.forEach(p => {
         let px = player.x + cameraX;
@@ -101,88 +135,56 @@ function update() {
     });
     player.y += player.vy;
 
-    // Infinite World
-    let lastP = platforms[platforms.length-1];
-    if (lastP.x < cameraX + 1200) {
-        let gap = 100 + Math.random() * 150;
-        platforms.push({ x: lastP.x + lastP.w + gap, y: 220 + Math.random() * 100, w: 500, h: 200 });
-        enemies.push({ x: lastP.x + lastP.w + gap + 200, y: 100, w: 40, h: 70, health: 100, state: "ALIVE", hue: Math.random()*360 });
-    }
-    
+    // Enemy Gravity Fix
+    enemies.forEach(en => {
+        en.vy += GRAVITY;
+        platforms.forEach(p => {
+            if (en.x + en.w > p.x && en.x < p.x + p.w && en.y + en.h <= p.y && en.y + en.h + en.vy >= p.y) {
+                en.vy = 0; en.y = p.y - en.h;
+            }
+        });
+        en.y += en.vy;
+    });
+
+    // Particle Update
+    particles.forEach((p, i) => {
+        p.x += p.vx; p.y += p.vy; p.vy += 0.2; p.life -= 0.02;
+        if(p.life <= 0) particles.splice(i, 1);
+    });
+
     player.actionFrame = Math.max(0, player.actionFrame - 1);
+    document.getElementById('health-fill').style.width = player.health + "%";
 }
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Anime City Sky
-    let grad = ctx.createLinearGradient(0,0,0,canvas.height);
-    grad.addColorStop(0, "#050510"); grad.addColorStop(1, "#1a0a2e");
-    ctx.fillStyle = grad; ctx.fillRect(0,0,canvas.width, canvas.height);
+    // Detailed Anime Sky
+    let bgGrad = ctx.createLinearGradient(0,0,0,400);
+    bgGrad.addColorStop(0, "#050515"); bgGrad.addColorStop(1, "#201040");
+    ctx.fillStyle = bgGrad; ctx.fillRect(0,0,1000,400);
 
-    // Parallax Neon Buildings
-    buildings.forEach(b => {
-        let x = (b.x - cameraX * 0.3) % 4000;
-        ctx.fillStyle = `hsla(${b.hue}, 70%, 20%, 0.8)`;
-        ctx.fillRect(x, canvas.height - b.h, b.w, b.h);
-        ctx.strokeStyle = `hsla(${b.hue}, 100%, 50%, 0.5)`;
-        ctx.strokeRect(x, canvas.height - b.h, b.w, b.h);
+    // Particles (Gore)
+    particles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.life;
+        ctx.fillRect(p.x - cameraX, p.y, p.size, p.size);
     });
+    ctx.globalAlpha = 1;
 
-    // Platforms
+    // Ground
     ctx.fillStyle = "#111";
     platforms.forEach(p => {
         ctx.fillRect(p.x - cameraX, p.y, p.w, p.h);
-        ctx.strokeStyle = "#00f2ff"; ctx.lineWidth = 2;
-        ctx.strokeRect(p.x - cameraX, p.y, p.w, 2);
+        ctx.strokeStyle = "#00f2ff"; ctx.strokeRect(p.x - cameraX, p.y, p.w, 3);
     });
 
-    // Draw Characters
-    drawAnimeHumanoid(player.x, player.y, player.dir, player.actionFrame, false);
-    enemies.forEach(en => {
-        if (en.state === "ALIVE") drawAnimeHumanoid(en.x - cameraX, en.y, -1, 0, true, en.hue);
-    });
+    // Characters
+    drawHumanoid(player.x, player.y, player.dir, player.actionFrame, false);
+    enemies.forEach(en => { if(en.state === "ALIVE") drawHumanoid(en.x - cameraX, en.y, -1, 0, true, en.hue); });
 
-    // Floating Dmg
-    damageNumbers.forEach((d, i) => {
-        ctx.fillStyle = d.color; ctx.font = "bold 20px Arial"; ctx.fillText(d.text, d.x, d.y);
-        d.y -= 1; d.life--; if(d.life <= 0) damageNumbers.splice(i,1);
-    });
-}
-
-function drawAnimeHumanoid(x, y, dir, action, isEnemy, hue = 0) {
-    ctx.save();
-    if (isEnemy) ctx.filter = `hue-rotate(${hue}deg)`;
-    
-    let legMove = Math.sin(animTimer*2) * 15;
-    
-    // Exact Image Colors & Shapes
-    // Left Leg
-    ctx.fillStyle = "#ffd54f"; // Yellow
-    ctx.fillRect(x + (dir > 0 ? 5 : 25), y + 45 + legMove, 10, 25);
-    // Right Leg
-    ctx.fillStyle = "#e53935"; // Red
-    ctx.fillRect(x + (dir > 0 ? 25 : 5), y + 45 - legMove, 10, 25);
-    // Torso
-    ctx.fillStyle = "#fb8c00"; // Orange
-    ctx.fillRect(x + 5, y + 20, 30, 30);
-    // Arms
-    ctx.fillStyle = "#8bc34a"; // Green
-    ctx.fillRect(x - 5 + (action*dir), y + 25, 12, 12);
-    ctx.fillStyle = "#ab47bc"; // Purple
-    ctx.fillRect(x + 33 - (action*dir), y + 25, 12, 12);
-    // Cyan Head
-    ctx.fillStyle = "#4dd0e1";
-    ctx.beginPath(); ctx.arc(x + 20, y + 5, 18, 0, Math.PI*2); ctx.fill();
-    
-    ctx.restore();
-}
-
-window.addEventListener('keydown', e => { window.keys = window.keys || {}; window.keys[e.key.toLowerCase()] = true; });
-window.addEventListener('keyup', e => { window.keys[e.key.toLowerCase()] = false; });
-
-function gameLoop() {
-    if (gameState === "PLAYING") { update(); draw(); }
     requestAnimationFrame(gameLoop);
 }
+
+function gameLoop() { update(); draw(); }
 gameLoop();
