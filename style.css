@@ -1,15 +1,8 @@
-body { margin: 0; background: #050510; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-#game-container { position: relative; width: 1000px; height: 400px; background: #000; border: 2px solid #00f2ff; overflow: hidden; }
-
-/* Gore Effect */
-#damage-overlay { position: absolute; inset: 0; background: radial-gradient(circle, transparent 40%, rgba(255,0,0,0.4) 100%); pointer-events: none; opacity: 0; transition: opacity 0.1s; z-index: 50; }
-
+body { margin: 0; background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
+#game-container { position: relative; width: 1000px; height: 400px; border: 2px solid #00f2ff; overflow: hidden; background: #000; }
 #ui { position: absolute; top: 10px; left: 10px; width: 980px; display: flex; justify-content: space-between; z-index: 20; pointer-events: none; }
-#pause-btn { pointer-events: all; background: none; color: #fff; border: 1px solid #fff; padding: 5px 10px; font-size: 10px; }
-
-#health-bar { width: 250px; height: 12px; border: 2px solid #fff; background: #200; skew: -20deg; }
-#health-fill { height: 100%; background: linear-gradient(90deg, #ff0055, #ffaa00); transition: width 0.2s; }
-
-#weapon-selector { pointer-events: all; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.7); padding: 5px; border: 1px solid #00f2ff; border-radius: 5px; }
-
-#pause-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; color: #fff; }
+#health-bar { width: 200px; height: 10px; border: 2px solid #fff; background: #300; }
+#health-fill { height: 100%; background: #ff0044; transition: width 0.2s; }
+#weapon-selector { pointer-events: all; display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.8); padding: 5px; border: 1px solid #00f2ff; color: #fff; }
+#combo-ui { position: absolute; left: 50%; top: 50px; transform: translateX(-50%); color: #00f2ff; font-size: 30px; font-weight: 900; text-shadow: 0 0 10px #00f2ff; }
+#pause-screen { position: absolute; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; }
