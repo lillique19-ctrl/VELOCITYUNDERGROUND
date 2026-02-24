@@ -3,7 +3,6 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 canvas.width = 1000; canvas.height = 400;
 
-// Physics & Animation
 const GRAVITY = 0.6;
 const FRICTION = 0.85;
 const ACCEL = 0.8;
@@ -17,29 +16,25 @@ let currentChapter = 1;
 const keys = {};
 const player = {
     x: 100, y: 100, vx: 0, vy: 0, w: 30, h: 65,
-    grounded: false, dir: 1, health: 3,
+    grounded: false, dir: 1, health: 100,
     isSliding: false, actionFrame: 0, actionType: null,
-    hasWeapon: true // Restored weapon status
+    lastY: 0 // For fall damage
 };
 
-// Procedural Terrain & World Design
 let platforms = [{ x: 0, y: 350, w: 1200, h: 100 }];
 let buildings = [];
+let props = []; // City aesthetics
 let enemies = [];
 
-function generateWorldStyle(ch) {
-    buildings = [];
-    enemies = [];
-    platforms = [{ x: 0, y: 350, w: 1200, h: 100 }];
-    
-    // Generate initial enemies
-    for(let i=1; i<5; i++) {
-        enemies.push({ x: i * 800, y: 200, w: 30, h: 60, health: 100, vx: -1, state: "ALIVE" });
-    }
-
-    for(let i=0; i<30; i++) {
-        let color = ch === 1 ? `rgba(100, 150, 200, 0.4)` : ch === 2 ? `rgba(255, 150, 50, 0.4)` : `rgba(30, 30, 60, 0.6)`;
-        buildings.push({ x: i * 350, w: 120 + Math.random() * 200, h: 150 + Math.random() * 250, color: color });
+function generateCityProps(xRange) {
+    const types = ["POSTER", "GRAFFITI", "VENT", "TRASH"];
+    for(let i=0; i<5; i++) {
+        props.push({
+            x: xRange + Math.random() * 500,
+            y: 300 + Math.random() * 50,
+            type: types[Math.floor(Math.random() * types.length)],
+            color: `hsl(${Math.random() * 360}, 50%, 50%)`
+        });
     }
 }
 
@@ -48,74 +43,124 @@ function startGame(ch) {
     generateWorldStyle(ch);
     document.getElementById('menu-screen').style.display = 'none';
     document.getElementById('ui').style.display = 'flex';
-    document.getElementById('current-chapter').innerText = "ZONE: " + ch;
     gameState = "PLAYING";
 }
 
-// Combat Logic - Restored Punch/Kicks
+function generateWorldStyle(ch) {
+    buildings = []; enemies = []; props = [];
+    platforms = [{ x: 0, y: 350, w: 1200, h: 100 }];
+    generateCityProps(0);
+}
+
 canvas.addEventListener('mousedown', () => {
     if (gameState !== "PLAYING" || player.actionFrame > 0) return;
     player.actionType = Math.random() > 0.5 ? "PUNCH" : "KICK";
-    player.actionFrame = 15;
+    player.actionFrame = 20;
 
     enemies.forEach(en => {
-        let screenEnX = en.x - cameraX;
-        let dist = Math.abs(player.x - screenEnX);
-        if (dist < 80 && en.state === "ALIVE") {
-            en.health -= 50;
+        let dist = Math.abs((player.x + cameraX) - en.x);
+        if (dist < 85 && en.state === "ALIVE") {
+            en.health -= 25;
+            en.vx = player.dir * 5; // Knockback
             combo++;
             comboTimer = 120;
-            damageNumbers.push({ x: screenEnX, y: en.y - 20, text: "-50", life: 30 });
+            spawnDamage(en.x - cameraX, en.y, "-25", "#ff00ff");
             if (en.health <= 0) en.state = "DEAD";
-            document.getElementById('combo-ui').style.display = 'block';
-            document.getElementById('combo-count').innerText = combo;
+            updateComboUI();
         }
     });
 });
+
+function spawnDamage(x, y, text, color) {
+    damageNumbers.push({ x, y, text, color, life: 40 });
+}
+
+function updateComboUI() {
+    const ui = document.getElementById('combo-ui');
+    ui.style.display = 'block';
+    ui.style.color = `hsl(${combo * 40}, 100%, 60%)`; // Changes color every hit
+    ui.style.textShadow = `0 0 15px hsl(${combo * 40}, 100%, 60%)`;
+    document.getElementById('combo-count').innerText = combo;
+}
 
 window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
 window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
 function update() {
-    animTimer += 0.18;
+    animTimer += 0.15;
     if (comboTimer > 0) comboTimer--; else { combo = 0; document.getElementById('combo-ui').style.display = 'none'; }
 
-    // Infinite World Generation
-    let lastPlat = platforms[platforms.length - 1];
-    if (lastPlat.x < cameraX + canvas.width + 500) {
-        let gap = Math.random() * 100 + 50;
-        platforms.push({ x: lastPlat.x + lastPlat.w + gap, y: 200 + Math.random() * 150, w: 400, h: 400 });
-        // Spawn more enemies on new platforms
-        enemies.push({ x: lastPlat.x + lastPlat.w + gap + 100, y: 0, w: 30, h: 60, health: 100, vx: -1, state: "ALIVE" });
+    // Fall to Death Logic
+    if (player.y > canvas.height + 100) {
+        player.health = 0;
+        location.reload(); // Simple reset on death
     }
 
-    // Movement
-    player.isSliding = keys['shift'] && player.grounded;
-    if (keys['d']) { player.vx += ACCEL; player.dir = 1; }
-    if (keys['a']) { player.vx -= ACCEL; player.dir = -1; }
-    if (keys['w'] && player.grounded) { player.vy = -14; player.grounded = false; }
+    // Procedural Generation
+    let lastPlat = platforms[platforms.length - 1];
+    if (lastPlat.x < cameraX + canvas.width + 600) {
+        let gap = 80 + Math.random() * 120;
+        let newX = lastPlat.x + lastPlat.w + gap;
+        platforms.push({ x: newX, y: 200 + Math.random() * 150, w: 400 + Math.random() * 400, h: 400 });
+        generateCityProps(newX);
+        // Spawn unique enemy
+        enemies.push({ 
+            x: newX + 100, y: 0, w: 30, h: 65, health: 100, 
+            vx: 0, state: "ALIVE", 
+            hue: Math.random() * 360, 
+            actionFrame: 0 
+        });
+    }
+
+    // Player Movement
+    if (keys['d']) player.vx += ACCEL;
+    if (keys['a']) player.vx -= ACCEL;
+    if (keys['w'] && player.grounded) {
+        player.vy = -14;
+        player.grounded = false;
+        player.lastY = player.y; // Track height for fall damage
+    }
 
     player.vx *= FRICTION;
     player.vy += GRAVITY;
     cameraX += player.vx;
 
-    // Platform Collision
+    // Collision & Fall Damage
+    let wasGrounded = player.grounded;
     player.grounded = false;
     platforms.forEach(p => {
         let sp = player.x + cameraX;
-        if (sp + player.w > p.x && sp < p.x + p.w && player.y + player.h <= p.y && player.y + player.h + player.vy >= p.y) {
-            player.vy = 0; player.y = p.y - player.h; player.grounded = true;
+        if (sp + player.w > p.x && sp < p.x + p.w) {
+            if (player.y + player.h <= p.y && player.y + player.h + player.vy >= p.y) {
+                // Check height diff for fall damage
+                let fallDist = player.y - player.lastY;
+                if (fallDist > 200) {
+                    player.health -= 20;
+                    spawnDamage(player.x, player.y, "CRUNCH!", "red");
+                }
+                player.vy = 0; player.y = p.y - player.h; player.grounded = true;
+                player.lastY = player.y;
+            }
         }
     });
 
     player.y += player.vy;
     if (player.actionFrame > 0) player.actionFrame--;
 
-    // Enemy AI - Simple Patrol
+    // Enemy AI: Attack & Move
     enemies.forEach(en => {
         if (en.state === "ALIVE") {
+            let dist = (player.x + cameraX) - en.x;
+            if (Math.abs(dist) < 300) en.vx = dist > 0 ? 2 : -2; // Chase
+            if (Math.abs(dist) < 60 && Math.random() < 0.05 && en.actionFrame === 0) {
+                en.actionFrame = 20; // Enemy Attack
+                player.health -= 5;
+                spawnDamage(player.x, player.y, "-5", "red");
+            }
             en.x += en.vx;
-            // Basic floor snapping for enemies
+            en.vx *= FRICTION;
+            if (en.actionFrame > 0) en.actionFrame--;
+            // Enemy Grounding
             platforms.forEach(p => {
                 if (en.x > p.x && en.x < p.x + p.w) en.y = p.y - en.h;
             });
@@ -125,74 +170,71 @@ function update() {
     damageNumbers.forEach((n, i) => { n.y -= 1; n.life--; if(n.life <= 0) damageNumbers.splice(i, 1); });
 }
 
-function drawCharacter(x, y, dir, sliding, isMoving, isEnemy) {
-    let legCycle = isMoving ? Math.sin(animTimer) * 12 : 0;
-    let breathe = !isMoving ? Math.sin(animTimer * 0.5) * 2 : 0;
+function drawHumanoid(x, y, dir, sliding, actionFrame, isEnemy, hue = 0) {
+    let cycle = Math.sin(animTimer) * 10;
     let yOff = sliding ? 30 : 0;
-
-    // Legs (Matching Image Colors)
-    ctx.fillStyle = isEnemy ? "#7c3f3f" : "#5a88a8"; 
-    ctx.fillRect(x + 5 + (dir * legCycle), y + 35 + yOff, 8, 25 - yOff); 
-    ctx.fillRect(x + 17 - (dir * legCycle), y + 35 + yOff, 8, 25 - yOff);
-
-    // Torso (Black Hoodie)
-    ctx.fillStyle = isEnemy ? "#331111" : "#1a1a1a";
-    ctx.fillRect(x, y + 10 + yOff - breathe, 30, (sliding ? 20 : 35) + breathe);
     
-    // Drawstrings
-    if (!isEnemy) {
-        ctx.fillStyle = "white";
-        ctx.fillRect(x + 12, y + 20 + yOff - breathe, 2, 8);
-        ctx.fillRect(x + 16, y + 20 + yOff - breathe, 2, 8);
-    }
+    ctx.save();
+    if (isEnemy) ctx.filter = `hue-rotate(${hue}deg)`;
 
-    // Cyan Face (Matching Image Exactly)
-    ctx.fillStyle = isEnemy ? "#ff6666" : "#66ccff"; 
-    ctx.fillRect(x + 6, y - 2 + yOff - breathe, 18, 16);
-    
-    // Facial Features
+    // Rounded Legs
+    ctx.fillStyle = "#333";
+    ctx.beginPath(); ctx.roundRect(x + 5 + cycle, y + 40 + yOff, 10, 25 - yOff, 5); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(x + 15 - cycle, y + 40 + yOff, 10, 25 - yOff, 5); ctx.fill();
+
+    // Smoother Hoodie
+    ctx.fillStyle = isEnemy ? "#400" : "#111";
+    ctx.beginPath(); ctx.roundRect(x, y + 15 + yOff, 30, 35, 10); ctx.fill();
+
+    // Head & Cyan Face
+    ctx.fillStyle = "#111";
+    ctx.beginPath(); ctx.arc(x + 15, y + 10 + yOff, 15, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#00f2ff";
+    ctx.beginPath(); ctx.roundRect(x + 7, y + 2 + yOff, 16, 14, 4); ctx.fill();
+
+    // Face Detail
     ctx.fillStyle = "black";
-    ctx.fillRect(x + 9, y + 3 + yOff - breathe, 4, 2); // Left Eye
-    ctx.fillRect(x + 17, y + 3 + yOff - breathe, 4, 2); // Right Eye
-    ctx.fillRect(x + 11, y + 9 + yOff - breathe, 8, 2); // Mouth
+    ctx.fillRect(x + 10, y + 6 + yOff, 3, 2); ctx.fillRect(x + 17, y + 6 + yOff, 3, 2);
+    ctx.fillRect(x + 11, y + 12 + yOff, 8, 1);
 
-    // Fight/Weapon Visual
-    if (player.actionFrame > 0 && !isEnemy) { 
-        ctx.fillStyle = "#f3d2b3"; 
-        let attackX = dir === 1 ? x + 30 : x - 20;
-        if (player.actionType === "PUNCH") ctx.fillRect(attackX, y + 20 + yOff, 20, 10);
-        else ctx.fillRect(attackX, y + 35 + yOff, 25, 12); // Kick
+    // Dynamic Attack Animation
+    if (actionFrame > 0) {
+        ctx.strokeStyle = "white"; ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(x + 15, y + 25);
+        ctx.lineTo(x + 15 + (dir * 40), y + 25 + (Math.sin(animTimer*5)*10));
+        ctx.stroke();
     }
+    ctx.restore();
 }
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Background
-    let sky = currentChapter === 1 ? "#aaccff" : currentChapter === 2 ? "#ffaa88" : "#050010";
-    ctx.fillStyle = sky; ctx.fillRect(0,0, canvas.width, canvas.height);
+    // BG
+    ctx.fillStyle = "#050010"; ctx.fillRect(0,0, canvas.width, canvas.height);
 
-    // Parallax City
-    buildings.forEach(b => {
-        let px = (b.x - (cameraX * 0.25)) % 4000;
-        ctx.fillStyle = b.color;
-        ctx.fillRect(px, canvas.height - b.h, b.w, b.h);
+    // City Aesthetics
+    props.forEach(p => {
+        ctx.fillStyle = p.color;
+        if (p.type === "POSTER") ctx.fillRect(p.x - cameraX, p.y, 20, 30);
+        else if (p.type === "GRAFFITI") ctx.fillText("NEON", p.x - cameraX, p.y);
     });
 
     // Platforms
-    ctx.fillStyle = "#222";
+    ctx.fillStyle = "#1a1a1a";
     platforms.forEach(p => ctx.fillRect(p.x - cameraX, p.y, p.w, p.h));
 
-    // Player
-    drawCharacter(player.x, player.y, player.dir, player.isSliding, Math.abs(player.vx) > 0.5, false);
+    // Entities
+    drawHumanoid(player.x, player.y, player.dir, player.isSliding, player.actionFrame, false);
+    enemies.forEach(en => {
+        if (en.state === "ALIVE") drawHumanoid(en.x - cameraX, en.y, en.vx > 0 ? 1 : -1, false, en.actionFrame, true, en.hue);
+    });
 
-    // Enemies
-    enemies.forEach(en => { if (en.state === "ALIVE") drawCharacter(en.x - cameraX, en.y, -1, false, true, true); });
-
-    // Floating Text
-    damageNumbers.forEach(n => { ctx.fillStyle = "#ff0000"; ctx.font = "bold 20px monospace"; ctx.fillText(n.text, n.x, n.y); });
-
+    // UI & Damage
+    damageNumbers.forEach(n => { ctx.fillStyle = n.color; ctx.fillText(n.text, n.x, n.y); });
     document.getElementById('speed').innerText = Math.round(Math.abs(player.vx));
+    
     requestAnimationFrame(gameLoop);
 }
 
