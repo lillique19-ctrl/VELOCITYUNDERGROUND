@@ -8,7 +8,6 @@
 <body>
     <div id="game-container">
         <div id="damage-overlay"></div>
-
         <div id="menu-screen">
             <h1>VELOCITY UNDERGROUND</h1>
             <div class="menu-options">
@@ -19,14 +18,13 @@
         </div>
 
         <div id="pause-screen" style="display: none;">
-            <h2>GAME PAUSED</h2>
+            <h2>PAUSED</h2>
             <button onclick="togglePause()">RESUME</button>
         </div>
 
         <div id="ui" style="display: none;">
             <div id="health-bar"><div id="health-fill"></div></div>
             <div id="combo-ui">COMBO X<span id="combo-count">0</span></div>
-            
             <div id="weapon-selector">
                 <div class="arrow" onclick="switchWeapon(-1)">◀</div>
                 <div id="weapon-box">
@@ -35,9 +33,7 @@
                 </div>
                 <div class="arrow" onclick="switchWeapon(1)">▶</div>
             </div>
-            <button id="pause-btn" onclick="togglePause()">PAUSE (ESC)</button>
         </div>
-
         <canvas id="gameCanvas"></canvas>
     </div>
     <script src="game.js"></script>
