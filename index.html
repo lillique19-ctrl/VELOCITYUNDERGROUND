@@ -2,11 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Velocity Underground | Anime Edition</title>
+    <title>Velocity Underground | Anime Strike</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="game-container">
+        <div id="damage-overlay"></div>
+
         <div id="menu-screen">
             <h1>VELOCITY UNDERGROUND</h1>
             <div class="menu-options">
@@ -16,12 +18,14 @@
             </div>
         </div>
 
+        <div id="pause-screen" style="display: none;">
+            <h2>GAME PAUSED</h2>
+            <button onclick="togglePause()">RESUME</button>
+        </div>
+
         <div id="ui" style="display: none;">
-            <div id="health-bar">
-                <div id="health-fill"></div>
-            </div>
+            <div id="health-bar"><div id="health-fill"></div></div>
             <div id="combo-ui">COMBO X<span id="combo-count">0</span></div>
-            <div class="stat">ZONE: <span id="current-chapter">1</span></div>
             
             <div id="weapon-selector">
                 <div class="arrow" onclick="switchWeapon(-1)">◀</div>
@@ -31,6 +35,7 @@
                 </div>
                 <div class="arrow" onclick="switchWeapon(1)">▶</div>
             </div>
+            <button id="pause-btn" onclick="togglePause()">PAUSE (ESC)</button>
         </div>
 
         <canvas id="gameCanvas"></canvas>
