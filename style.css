@@ -1,13 +1,23 @@
-body { margin: 0; background: #020005; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Courier New', monospace; overflow: hidden; }
-#game-container { position: relative; border: 4px solid #1a1a1a; background: #020005; overflow: hidden; width: 1000px; height: 400px; }
-#ui { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 10px; z-index: 10; }
-#health-bar { display: flex; gap: 5px; background: rgba(0,0,0,0.7); padding: 5px; border-radius: 5px; }
-#combo-ui { font-size: 24px; color: #ff00ff; text-shadow: 0 0 10px #ff00ff; font-weight: bold; display: none; }
-.stat { background: rgba(0, 0, 0, 0.9); color: #00ffcc; padding: 8px 12px; border: 1px solid #333; width: fit-content; }
-#inventory-container { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
-.inv-slot { width: 50px; height: 50px; background: rgba(0,0,0,0.8); border: 2px solid #444; color: #00ffcc; font-size: 9px; display: flex; justify-content: center; align-items: center; }
-.inv-slot.active { border-color: #ff00ff; box-shadow: 0 0 10px #ff00ff; }
-#menu-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; }
-h1 { color: #00ffcc; text-shadow: 0 0 20px #00ffcc; font-size: 3rem; margin-bottom: 30px; }
-button { background: transparent; color: #ff00ff; border: 2px solid #ff00ff; padding: 15px 40px; cursor: pointer; transition: 0.3s; }
-button:hover { background: #ff00ff; color: white; box-shadow: 0 0 20px #ff00ff; }
+body { margin: 0; background: #0b0b1a; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: 'Arial', sans-serif; overflow: hidden; }
+
+#game-container { position: relative; width: 1000px; height: 400px; background: #050510; border: 3px solid #00f2ff; box-shadow: 0 0 20px #00f2ff; }
+
+#ui { position: absolute; top: 10px; left: 10px; width: 980px; display: flex; justify-content: space-between; z-index: 10; pointer-events: none; }
+
+#health-bar { width: 200px; height: 15px; background: #333; border: 2px solid #fff; box-shadow: 0 0 10px #ff0055; }
+#health-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff0055, #ff55aa); transition: width 0.3s; }
+
+#weapon-selector { position: absolute; right: 0; top: 0; display: flex; align-items: center; gap: 10px; pointer-events: all; background: rgba(0,0,0,0.8); padding: 10px; border: 2px solid #00f2ff; border-radius: 10px; }
+.arrow { color: #00f2ff; cursor: pointer; font-size: 24px; font-weight: bold; }
+#weapon-box { width: 80px; text-align: center; }
+#weapon-name { color: #fff; font-size: 10px; margin-bottom: 5px; text-transform: uppercase; }
+#weapon-icon { font-size: 30px; }
+
+#combo-ui { position: absolute; left: 50%; top: 50px; transform: translateX(-50%); font-size: 40px; font-weight: 900; font-style: italic; color: #fff; text-shadow: 2px 2px 0 #ff00ff, -2px -2px 0 #00f2ff; display: none; }
+
+.stat { color: #00f2ff; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; border: 1px solid #00f2ff; }
+
+#menu-screen { position: absolute; inset: 0; background: rgba(5,5,15,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
+h1 { color: #fff; text-shadow: 0 0 15px #00f2ff; font-size: 3.5rem; letter-spacing: 5px; }
+button { background: transparent; border: 2px solid #00f2ff; color: #00f2ff; padding: 15px 30px; margin: 10px; cursor: pointer; transition: 0.2s; }
+button:hover { background: #00f2ff; color: #000; box-shadow: 0 0 20px #00f2ff; }
