@@ -2,38 +2,55 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Velocity Underground | Anime Strike</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velocity Underground | Remastered</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="game-container">
-        <div id="damage-overlay"></div>
-        <div id="menu-screen">
-            <h1>VELOCITY UNDERGROUND</h1>
-            <div class="menu-options">
-                <button onclick="startGame(1)">CH 1: DAYLIGHT</button>
-                <button onclick="startGame(2)">CH 2: SUNSET</button>
-                <button onclick="startGame(3)">CH 3: NIGHT MODE</button>
-            </div>
-        </div>
-
-        <div id="pause-screen" style="display: none;">
-            <h2>PAUSED</h2>
-            <button onclick="togglePause()">RESUME</button>
-        </div>
+        <div id="vignette"></div>
+        <div id="damage-flash"></div>
 
         <div id="ui" style="display: none;">
-            <div id="health-bar"><div id="health-fill"></div></div>
-            <div id="combo-ui">COMBO X<span id="combo-count">0</span></div>
-            <div id="weapon-selector">
-                <div class="arrow" onclick="switchWeapon(-1)">◀</div>
-                <div id="weapon-box">
-                    <div id="weapon-name">FIST</div>
-                    <div id="weapon-icon">👊</div>
+            <div class="hud-top-left">
+                <div class="player-tag">ATHLETE_01</div>
+                <div id="health-container">
+                    <div id="health-bar"></div>
                 </div>
-                <div class="arrow" onclick="switchWeapon(1)">▶</div>
+            </div>
+
+            <div id="combo-module">
+                <div id="combo-count">0</div>
+                <div id="combo-label">COMBO</div>
+            </div>
+
+            <div class="weapon-bay">
+                <div class="bay-arrow" onclick="switchWeapon(-1)">◀</div>
+                <div id="active-weapon">
+                    <div id="weapon-icon">👊</div>
+                    <div id="weapon-name">FIST</div>
+                </div>
+                <div class="bay-arrow" onclick="switchWeapon(1)">▶</div>
+            </div>
+            
+            <button id="pause-trigger" onclick="togglePause()">ESC || PAUSE</button>
+        </div>
+
+        <div id="pause-menu" style="display: none;">
+            <h2>SYSTEM PAUSED</h2>
+            <button class="menu-btn" onclick="togglePause()">RESUME</button>
+            <button class="menu-btn" onclick="location.reload()">QUIT</button>
+        </div>
+
+        <div id="menu-screen">
+            <h1 class="glitch-text">VELOCITY<span>UNDERGROUND</span></h1>
+            <div class="menu-grid">
+                <button class="start-btn" onclick="startGame(1)">ZONE 01: DAY</button>
+                <button class="start-btn" onclick="startGame(2)">ZONE 02: DUSK</button>
+                <button class="start-btn" onclick="startGame(3)">ZONE 03: NIGHT</button>
             </div>
         </div>
+
         <canvas id="gameCanvas"></canvas>
     </div>
     <script src="game.js"></script>
