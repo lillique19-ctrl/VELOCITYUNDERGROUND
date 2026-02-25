@@ -1,60 +1,15 @@
-:root {
-    --neon-cyan: #00f2ff;
-    --neon-pink: #ff0077;
-    --dark-bg: #05050a;
-}
-
-body { 
-    margin: 0; background: #000; height: 100vh; 
-    display: flex; justify-content: center; align-items: center;
-    font-family: 'Segoe UI', sans-serif; overflow: hidden;
-}
-
 #game-container { 
     position: relative; width: 1000px; height: 450px; 
-    background: var(--dark-bg); border: 1px solid #222;
-    box-shadow: 0 0 50px rgba(0,0,0,1);
+    border: 1px solid #333; overflow: hidden; background: #000;
+    box-shadow: 0 0 40px rgba(0,242,255,0.2);
 }
-
-/* UI Modules */
 #ui { position: absolute; inset: 20px; pointer-events: none; z-index: 50; }
-
-.hud-top-left { width: 250px; }
-.player-tag { color: var(--neon-cyan); font-weight: 900; font-size: 12px; margin-bottom: 5px; }
-#health-container { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
-#health-bar { width: 100%; height: 100%; background: linear-gradient(90deg, var(--neon-cyan), #fff); transition: width 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
-
-#combo-module { 
-    position: absolute; left: 50%; top: 20px; transform: translateX(-50%);
-    text-align: center; color: white; display: none;
-}
-#combo-count { font-size: 48px; font-weight: 900; line-height: 1; text-shadow: 0 0 10px var(--neon-pink); }
-#combo-label { font-size: 10px; letter-spacing: 3px; }
-
+#health-container { width: 200px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
+#health-bar { width: 100%; height: 100%; background: #ff0055; transition: 0.3s; }
 .weapon-bay { 
     position: absolute; right: 0; top: 0; pointer-events: all;
-    background: rgba(0,0,0,0.8); border: 1px solid var(--neon-cyan);
+    background: rgba(0,0,0,0.8); border: 1px solid #00f2ff;
     padding: 10px; border-radius: 8px; display: flex; align-items: center; gap: 15px;
 }
-.bay-arrow { color: var(--neon-cyan); cursor: pointer; font-weight: bold; }
-#active-weapon { width: 60px; text-align: center; }
-#weapon-icon { font-size: 24px; }
-#weapon-name { font-size: 9px; color: #aaa; margin-top: 4px; }
-
-/* Menus */
-#menu-screen { 
-    position: absolute; inset: 0; background: var(--dark-bg);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100;
-}
-.glitch-text { color: #fff; font-size: 4rem; font-weight: 900; letter-spacing: -2px; }
-.glitch-text span { color: var(--neon-cyan); }
-.menu-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 30px; }
-.start-btn { 
-    background: none; border: 1px solid #444; color: #888; 
-    padding: 15px 20px; cursor: pointer; transition: 0.3s;
-}
-.start-btn:hover { border-color: var(--neon-cyan); color: #fff; background: rgba(0,242,255,0.05); }
-
-/* Effects */
-#damage-flash { position: absolute; inset: 0; background: rgba(255,0,0,0.2); opacity: 0; pointer-events: none; }
-#vignette { position: absolute; inset: 0; background: radial-gradient(circle, transparent 50%, #000 120%); pointer-events: none; }
+#combo-module { position: absolute; left: 50%; top: 20px; transform: translateX(-50%); color: #fff; text-align: center; }
+#combo-count { font-size: 40px; font-weight: 900; text-shadow: 0 0 10px #00f2ff; }
