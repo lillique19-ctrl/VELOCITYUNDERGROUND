@@ -1,58 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Velocity Underground | Remastered</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div id="game-container">
-        <div id="vignette"></div>
-        <div id="damage-flash"></div>
-
-        <div id="ui" style="display: none;">
-            <div class="hud-top-left">
-                <div class="player-tag">ATHLETE_01</div>
-                <div id="health-container">
-                    <div id="health-bar"></div>
-                </div>
-            </div>
-
-            <div id="combo-module">
-                <div id="combo-count">0</div>
-                <div id="combo-label">COMBO</div>
-            </div>
-
-            <div class="weapon-bay">
-                <div class="bay-arrow" onclick="switchWeapon(-1)">◀</div>
-                <div id="active-weapon">
-                    <div id="weapon-icon">👊</div>
-                    <div id="weapon-name">FIST</div>
-                </div>
-                <div class="bay-arrow" onclick="switchWeapon(1)">▶</div>
-            </div>
-            
-            <button id="pause-trigger" onclick="togglePause()">ESC || PAUSE</button>
+<div id="game-container">
+    <div id="ui" style="display: none;">
+        <div id="health-container"><div id="health-bar"></div></div>
+        <div id="combo-module"><div id="combo-count">0</div><div>COMBO</div></div>
+        <div class="weapon-bay">
+            <div onclick="switchWeapon(-1)" style="cursor:pointer; color:#00f2ff">◀</div>
+            <div id="active-weapon"><div id="weapon-icon">👊</div><div id="weapon-name" style="font-size:10px; color:#fff">FIST</div></div>
+            <div onclick="switchWeapon(1)" style="cursor:pointer; color:#00f2ff">▶</div>
         </div>
-
-        <div id="pause-menu" style="display: none;">
-            <h2>SYSTEM PAUSED</h2>
-            <button class="menu-btn" onclick="togglePause()">RESUME</button>
-            <button class="menu-btn" onclick="location.reload()">QUIT</button>
-        </div>
-
-        <div id="menu-screen">
-            <h1 class="glitch-text">VELOCITY<span>UNDERGROUND</span></h1>
-            <div class="menu-grid">
-                <button class="start-btn" onclick="startGame(1)">ZONE 01: DAY</button>
-                <button class="start-btn" onclick="startGame(2)">ZONE 02: DUSK</button>
-                <button class="start-btn" onclick="startGame(3)">ZONE 03: NIGHT</button>
-            </div>
-        </div>
-
-        <canvas id="gameCanvas"></canvas>
     </div>
-    <script src="game.js"></script>
-</body>
-</html>
+    <div id="pause-menu" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.8); color:#fff; flex-direction:column; align-items:center; justify-content:center; z-index:100;">
+        <h2>PAUSED</h2>
+        <button onclick="togglePause()">RESUME</button>
+    </div>
+    <div id="menu-screen" style="position:absolute; inset:0; background:#050510; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100;">
+        <h1 style="color:#fff; font-size:3rem;">VELOCITY Remastered</h1>
+        <button onclick="startGame()" style="padding:15px 40px; background:#00f2ff; border:none; cursor:pointer; font-weight:bold;">START MISSION</button>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+</div>
