@@ -1,20 +1,32 @@
-<div id="game-container">
-    <div id="ui" style="display: none;">
-        <div id="health-container"><div id="health-bar"></div></div>
-        <div id="combo-module"><div id="combo-count">0</div><div>COMBO</div></div>
-        <div class="weapon-bay">
-            <div onclick="switchWeapon(-1)" style="cursor:pointer; color:#00f2ff">◀</div>
-            <div id="active-weapon"><div id="weapon-icon">👊</div><div id="weapon-name" style="font-size:10px; color:#fff">FIST</div></div>
-            <div onclick="switchWeapon(1)" style="cursor:pointer; color:#00f2ff">▶</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Velocity Underground | Pro Remaster</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="ui" style="display: none;">
+            <div id="health-container"><div id="health-bar"></div></div>
+            <div id="combo-module"><div id="combo-count">0</div><div style="font-size:10px">COMBO</div></div>
+            <div class="weapon-bay">
+                <div onclick="switchWeapon(-1)" class="nav-arrow">◀</div>
+                <div id="active-weapon">
+                    <div id="weapon-icon">👊</div>
+                    <div id="weapon-name">FIST</div>
+                </div>
+                <div onclick="switchWeapon(1)" class="nav-arrow">▶</div>
+            </div>
         </div>
+
+        <div id="menu-screen">
+            <h1 class="pro-logo">VELOCITY<span>UNDERGROUND</span></h1>
+            <button class="pro-start-btn" onclick="startGame()">START MISSION</button>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
     </div>
-    <div id="pause-menu" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.8); color:#fff; flex-direction:column; align-items:center; justify-content:center; z-index:100;">
-        <h2>PAUSED</h2>
-        <button onclick="togglePause()">RESUME</button>
-    </div>
-    <div id="menu-screen" style="position:absolute; inset:0; background:#050510; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100;">
-        <h1 style="color:#fff; font-size:3rem;">VELOCITY Remastered</h1>
-        <button onclick="startGame()" style="padding:15px 40px; background:#00f2ff; border:none; cursor:pointer; font-weight:bold;">START MISSION</button>
-    </div>
-    <canvas id="gameCanvas"></canvas>
-</div>
+    <script src="game.js"></script>
+</body>
+</html>
