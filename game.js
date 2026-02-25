@@ -2,24 +2,24 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 canvas.width = 1000; canvas.height = 450;
 
-// Engine Constants
+// Optimized Game State
 let gameState = "MENU", isPaused = false;
-const GRAVITY = 0.45, FRICTION = 0.88, ACCEL = 0.7;
+const physics = { gravity: 0.5, friction: 0.88, accel: 0.75 };
 let cameraX = 0, animTimer = 0, combo = 0, comboTimer = 0;
 
-// Assets Definition
-const weapons = [
-    { name: "FIST", icon: "👊", damage: 20, range: 60, color: "#fff" },
-    { name: "KATANA", icon: "⚔️", damage: 45, range: 110, color: "#00f2ff" }
+// Weapons System
+const arsenal = [
+    { name: "FIST", icon: "👊", dmg: 25, range: 60, color: "#fff" },
+    { name: "KATANA", icon: "⚔️", dmg: 55, range: 110, color: "#00f2ff" }
 ];
 let currentWep = 0;
 
 // Entity Factory
 const player = {
-    x: 100, y: 100, vx: 0, vy: 0, w: 35, h: 80, health: 100,
-    dir: 1, action: 0, grounded: false
+    x: 100, y: 100, vx: 0, vy: 0, w: 35, h: 80, 
+    health: 100, dir: 1, action: 0, grounded: false
 };
-let enemies = [], platforms = [], particles = [], debris = [];
+let platforms = [], enemies = [], gore = [];
 
 function togglePause() {
     isPaused = !isPaused;
@@ -27,83 +27,80 @@ function togglePause() {
 }
 
 function switchWeapon(dir) {
-    currentWep = (currentWep + dir + weapons.length) % weapons.length;
-    document.getElementById('weapon-icon').innerText = weapons[currentWep].icon;
-    document.getElementById('weapon-name').innerText = weapons[currentWep].name;
+    currentWep = (currentWep + dir + arsenal.length) % arsenal.length;
+    document.getElementById('weapon-icon').innerText = arsenal[currentWep].icon;
+    document.getElementById('weapon-name').innerText = arsenal[currentWep].name;
 }
 
-function startGame(ch) {
+function startGame() {
     gameState = "PLAYING";
-    player.health = 100; player.x = 100; cameraX = 0;
-    platforms = [{ x: 0, y: 380, w: 2500, h: 100 }];
-    enemies = [];
+    player.health = 100; player.y = 100; cameraX = 0;
+    platforms = [{ x: 0, y: 380, w: 2000, h: 200 }, { x: 2200, y: 300, w: 800, h: 200 }];
+    enemies = [{ x: 800, y: 100, health: 100, state: "ALIVE", vy: 0, hue: 0 }];
     document.getElementById('menu-screen').style.display = 'none';
     document.getElementById('ui').style.display = 'flex';
 }
 
-// Particle System
-function spawnBlood(x, y, color = "#ff0044") {
-    for(let i=0; i<10; i++) {
-        particles.push({
-            x, y, vx: (Math.random()-0.5)*12, vy: (Math.random()-0.5)*12,
-            size: Math.random()*4+1, life: 1, color
-        });
-    }
-}
-
-// Humanoid Render (Reference Image Accurate + Athletic)
-function drawHuman(x, y, dir, action, isEnemy, hue = 0) {
+// Athletic Humanoid Drawing (Reference Image Accuracy)
+function drawAthlete(x, y, dir, action, isEnemy, hue = 0) {
     ctx.save();
     if(isEnemy) ctx.filter = `hue-rotate(${hue}deg) brightness(0.6)`;
     
-    let legCycle = Math.sin(animTimer * 1.8) * 14;
+    const walk = Math.sin(animTimer * 2) * 15;
     
-    // Detailed Athletic Legs
-    ctx.fillStyle = "#ffd54f"; // Yellow Leg
-    ctx.beginPath(); ctx.roundRect(x + (dir>0?5:20), y + 50 + legCycle, 10, 30, 5); ctx.fill();
-    ctx.fillStyle = "#e53935"; // Red Leg
-    ctx.beginPath(); ctx.roundRect(x + (dir>0?20:5), y + 50 - legCycle, 10, 30, 5); ctx.fill();
+    // 1. Athletic Legs (Yellow & Red from Image)
+    ctx.fillStyle = "#ffd54f"; // Left
+    ctx.beginPath(); ctx.roundRect(x + (dir>0?5:22), y + 50 + walk, 10, 30, 5); ctx.fill();
+    ctx.fillStyle = "#e53935"; // Right
+    ctx.beginPath(); ctx.roundRect(x + (dir>0?22:5), y + 50 - walk, 10, 30, 5); ctx.fill();
 
-    // V-Taper Torso
-    ctx.fillStyle = "#111"; 
+    // 2. V-Taper Athletic Torso
+    ctx.fillStyle = "#111"; // Black Hoodie
     ctx.beginPath();
-    ctx.moveTo(x, y+20); ctx.lineTo(x+30, y+20); ctx.lineTo(x+22, y+50); ctx.lineTo(x+8, y+50); ctx.fill();
+    ctx.moveTo(x, y+20); ctx.lineTo(x+35, y+20); 
+    ctx.lineTo(x+25, y+50); ctx.lineTo(x+10, y+50); ctx.closePath(); ctx.fill();
     
-    // Cyan Face (Smooth)
-    ctx.fillStyle = "#4dd0e1";
-    ctx.beginPath(); ctx.arc(x + 15, y + 5, 18, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = "#000"; // Eyes
-    ctx.fillRect(x+10, y+2, 3, 2); ctx.fillRect(x+18, y+2, 3, 2);
+    // 3. Orange Chest Detail
+    ctx.fillStyle = "#fb8c00";
+    ctx.fillRect(x+12, y+25, 11, 15);
 
-    // Combat Visuals
+    // 4. Cyan Head (Proportional)
+    ctx.fillStyle = "#4dd0e1";
+    ctx.beginPath(); ctx.arc(x + 17.5, y + 5, 18, 0, Math.PI*2); ctx.fill();
+    
+    // 5. Eyes
+    ctx.fillStyle = "#000";
+    ctx.fillRect(x+12, y+2, 4, 3); ctx.fillRect(x+22, y+2, 4, 3);
+
+    // 6. Combat FX
     if (action > 0) {
-        ctx.strokeStyle = weapons[currentWep].color;
-        ctx.lineWidth = 6;
-        ctx.lineCap = "round";
+        ctx.strokeStyle = arsenal[currentWep].color;
+        ctx.lineWidth = 4;
         ctx.beginPath();
-        ctx.moveTo(x+15, y+30);
-        ctx.lineTo(x+15 + (dir * action * 5), y + 30 + (Math.sin(action)*15));
+        ctx.moveTo(x+17, y+30);
+        ctx.lineTo(x+17 + (dir * 70), y+30 + (Math.sin(animTimer*10)*20));
         ctx.stroke();
     }
     ctx.restore();
 }
 
 function update() {
-    if(isPaused) return;
-    animTimer += 0.12;
+    if(isPaused || gameState !== "PLAYING") return;
+    animTimer += 0.15;
     if(comboTimer > 0) comboTimer--; else combo = 0;
 
-    // Movement Physics
+    // Movement
     const keys = window.keys || {};
-    if(keys['d']) { player.vx += ACCEL; player.dir = 1; }
-    if(keys['a']) { player.vx -= ACCEL; player.dir = -1; }
+    if(keys['d']) { player.vx += physics.accel; player.dir = 1; }
+    if(keys['a']) { player.vx -= physics.accel; player.dir = -1; }
     if(keys['w'] && player.grounded) { player.vy = -14; player.grounded = false; }
 
-    player.vx *= FRICTION; player.vy += GRAVITY;
+    player.vx *= physics.friction;
+    player.vy += physics.gravity;
     cameraX += player.vx;
     player.y += player.vy;
 
-    // Pro Collision
+    // Fixed Collision Logic
     player.grounded = false;
     platforms.forEach(p => {
         let px = player.x + cameraX;
@@ -112,69 +109,64 @@ function update() {
         }
     });
 
-    // Enemy AI & Combat Logic
-    if(Math.random() < 0.01) {
-        enemies.push({ x: cameraX + 1100, y: 0, health: 100, state: "ALIVE", vy: 0, hue: Math.random()*360 });
-    }
-
+    // Enemy/Gore Updates
     enemies.forEach(en => {
-        en.vy += GRAVITY;
-        platforms.forEach(p => { if(en.x > p.x && en.x < p.x + p.w && en.y + en.h <= p.y && en.y + en.h + en.vy >= p.y) en.vy = 0; });
+        en.vy += physics.gravity;
+        platforms.forEach(p => { if(en.x > p.x && en.x < p.x+p.w && en.y+en.h <= p.y && en.y+en.h+en.vy >= p.y) en.vy = 0; });
         en.y += en.vy;
-        
-        // Simple Chase
-        let dist = (player.x + cameraX) - en.x;
-        if(Math.abs(dist) < 400 && en.state === "ALIVE") en.x += dist > 0 ? 2 : -2;
     });
 
-    // Particle/Action Cleanup
-    particles.forEach((p, i) => { 
-        p.x += p.vx; p.y += p.vy; p.life -= 0.02; 
-        if(p.life <= 0) particles.splice(i, 1); 
+    gore.forEach((p, i) => { 
+        p.x += p.vx; p.y += p.vy; p.vy += 0.2; p.l -= 0.02; 
+        if(p.l <= 0) gore.splice(i, 1); 
     });
+
+    if (player.y > canvas.height + 200) restartGame();
     player.action = Math.max(0, player.action - 1);
-
-    // Dynamic UI Update
-    document.getElementById('health-bar').style.width = player.health + "%";
-    document.getElementById('combo-module').style.display = combo > 0 ? "block" : "none";
-    document.getElementById('combo-count').innerText = combo;
+    updateUI();
 }
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Cinematic Parallax Background
-    let bg = ctx.createLinearGradient(0,0,0,canvas.height);
-    bg.addColorStop(0, "#050510"); bg.addColorStop(1, "#100a20");
-    ctx.fillStyle = bg; ctx.fillRect(0,0,canvas.width, canvas.height);
+    // Professional Gradient Sky
+    let sky = ctx.createLinearGradient(0,0,0,canvas.height);
+    sky.addColorStop(0, "#050510"); sky.addColorStop(1, "#150a25");
+    ctx.fillStyle = sky; ctx.fillRect(0,0,canvas.width, canvas.height);
 
-    // Glowing Platforms
+    // Platforms
+    ctx.fillStyle = "#0a0a0a";
     platforms.forEach(p => {
-        ctx.fillStyle = "#0a0a0a"; ctx.fillRect(p.x - cameraX, p.y, p.w, p.h);
-        ctx.strokeStyle = "#00f2ff22"; ctx.lineWidth = 1; ctx.strokeRect(p.x - cameraX, p.y, p.w, 3);
+        ctx.fillRect(p.x - cameraX, p.y, p.w, p.h);
+        ctx.strokeStyle = "#00f2ff33"; ctx.strokeRect(p.x - cameraX, p.y, p.w, 2);
     });
 
-    // Particles
-    particles.forEach(p => {
-        ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
-        ctx.fillRect(p.x - cameraX, p.y, p.size, p.size);
-    });
-    ctx.globalAlpha = 1;
+    // Gore
+    gore.forEach(p => { ctx.fillStyle = `rgba(255,0,50,${p.l})`; ctx.fillRect(p.x - cameraX, p.y, p.s, p.s); });
 
     // Entities
-    drawHuman(player.x, player.y, player.dir, player.action, false);
-    enemies.forEach(en => { if(en.state === "ALIVE") drawHuman(en.x - cameraX, en.y, -1, 0, true, en.hue); });
+    drawAthlete(player.x, player.y, player.dir, player.action, false);
+    enemies.forEach(en => { if(en.state === "ALIVE") drawAthlete(en.x - cameraX, en.y, -1, 0, true, en.hue); });
+
+    requestAnimationFrame(draw);
 }
 
-// Input Bridge
+function updateUI() {
+    document.getElementById('health-bar').style.width = player.health + "%";
+    document.getElementById('combo-count').innerText = combo;
+    document.getElementById('combo-module').style.display = combo > 0 ? "block" : "none";
+}
+
+function restartGame() { gameState = "MENU"; document.getElementById('menu-screen').style.display = 'flex'; }
+
 canvas.addEventListener('mousedown', () => {
-    if(gameState !== "PLAYING" || isPaused || player.action > 0) return;
+    if(isPaused || player.action > 0) return;
     player.action = 15;
     enemies.forEach(en => {
         let dist = Math.abs((player.x + cameraX) - en.x);
-        if(dist < weapons[currentWep].range && en.state === "ALIVE") {
-            en.health -= weapons[currentWep].damage;
-            spawnBlood(en.x - cameraX + 15, en.y + 30);
+        if(dist < arsenal[currentWep].range && en.state === "ALIVE") {
+            en.health -= arsenal[currentWep].dmg;
+            for(let i=0; i<10; i++) gore.push({x: en.x, y: en.y+30, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, s: Math.random()*4+2, l: 1});
             combo++; comboTimer = 100;
             if(en.health <= 0) en.state = "DEAD";
         }
@@ -184,5 +176,5 @@ canvas.addEventListener('mousedown', () => {
 window.addEventListener('keydown', e => { if(e.key === "Escape") togglePause(); window.keys = window.keys || {}; window.keys[e.key.toLowerCase()] = true; });
 window.addEventListener('keyup', e => { window.keys[e.key.toLowerCase()] = false; });
 
-function loop() { update(); draw(); requestAnimationFrame(loop); }
-loop();
+setInterval(update, 1000/60); // Independent logic loop
+draw(); // Visual loop
